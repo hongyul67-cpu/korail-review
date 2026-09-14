@@ -193,7 +193,9 @@
   var f = document.getElementById('f');
   var msg = document.getElementById('msg');
   var sendBtn = document.getElementById('send');
-  var rc = new URLSearchParams(location.search).get('rc') || '';
+  // ?rc= 가 있으면 그 선생님 시트로, 없으면(허브에서 주소 없이 복사한 링크) 기본 시트로 받는다
+  var DEFAULT_RC = 'https://script.google.com/macros/s/AKfycbwtiyLA_Q8-IRtfnedMvwRogu1JTryHitMIKazstECne0olNv8rAhEY6QXN35cRv4IT/exec';
+  var rc = new URLSearchParams(location.search).get('rc') || DEFAULT_RC;
   if (!/^https:\/\/script\.google\.com\/macros\/s\/[^/]+\/exec/.test(rc)) rc = '';
   if (!rc) document.getElementById('noRc').hidden = false;
 
