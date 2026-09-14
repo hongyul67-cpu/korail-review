@@ -1,0 +1,319 @@
+<!-- 코레일 1차(필기) 응시 후기 — 폰으로 작성해 선생님 구글시트로 제출
+     제출 주소는 링크의 ?rc=<Apps Script /exec 주소> 로 받는다 (collector.js 와 같은 방식).
+     시트 탭 이름: "코레일 1차 필기 후기" — 문항 답은 Code.gs rcAppend 의 cols 로 열마다 들어간다. -->
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>코레일 1차 필기 후기</title>
+<style>
+  :root{--bg:#f4f6f9;--card:#fff;--ink:#1c2430;--sub:#5b6675;--line:#dde3ea;--main:#0b5fa5;--main2:#e8f1fa;--ok:#15803d;--err:#b91c1c}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 system-ui,"Malgun Gothic","Apple SD Gothic Neo",sans-serif;padding:0 16px 60px}
+  .wrap{max-width:640px;margin:0 auto}
+  header{padding:22px 0 10px}
+  header .tag{display:inline-block;background:var(--main);color:#fff;font-size:12px;font-weight:700;padding:2px 10px;border-radius:99px}
+  h1{font-size:22px;margin:8px 0 4px}
+  header p{margin:0;color:var(--sub);font-size:14px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin:12px 0}
+  .card h2{font-size:15px;margin:0 0 10px;color:var(--main)}
+  .q{margin:14px 0 0}
+  .q:first-of-type{margin-top:0}
+  .q>label,.q>.lab{display:block;font-weight:700;margin-bottom:6px}
+  .q .hint{font-weight:400;color:var(--sub);font-size:13px}
+  .req{color:var(--err)}
+  .row{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px}
+  input[type=text],input[type=number],input[type=date],select,textarea{width:100%;font:inherit;padding:9px 10px;border:1px solid var(--line);border-radius:9px;background:#fff;color:var(--ink)}
+  textarea{min-height:74px;resize:vertical}
+  .chips{display:flex;flex-wrap:wrap;gap:6px}
+  .chips label{position:relative}
+  .chips input{position:absolute;opacity:0;pointer-events:none}
+  .chips span{display:inline-block;padding:7px 12px;border:1px solid var(--line);border-radius:99px;background:#fff;cursor:pointer;font-size:14px;user-select:none}
+  .chips input:checked+span{background:var(--main);border-color:var(--main);color:#fff;font-weight:700}
+  .chips input:focus-visible+span{outline:2px solid var(--main);outline-offset:2px}
+  table.area{width:100%;border-collapse:collapse;font-size:14px}
+  table.area td{padding:6px 0;border-bottom:1px dashed var(--line);vertical-align:middle}
+  table.area td:first-child{width:34%;font-weight:600}
+  .area .chips span{padding:5px 10px;font-size:13px}
+  .notice{background:#fff7e6;border:1px solid #f5d38a;color:#7a5200;border-radius:10px;padding:10px 12px;font-size:13.5px}
+  .btn{display:block;width:100%;font:inherit;font-weight:700;font-size:16px;padding:13px;border:0;border-radius:11px;background:var(--main);color:#fff;cursor:pointer}
+  .btn:disabled{opacity:.55;cursor:default}
+  .btn.ghost{background:var(--main2);color:var(--main);margin-top:8px}
+  .msg{margin-top:10px;font-size:14px;min-height:1.4em}
+  .msg.ok{color:var(--ok);font-weight:700}
+  .msg.err{color:var(--err);font-weight:700}
+  .done{text-align:center;padding:30px 16px}
+  .done .big{font-size:48px;line-height:1}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <span class="tag">취업지원부</span>
+    <h1>🚆 코레일 1차(필기) 응시 후기</h1>
+    <p>5분이면 끝나요. 후배들 준비 자료로 씁니다. <b>문제 원문을 그대로 옮겨 적지는 말고</b>, 유형·소재·느낌 위주로 적어 주세요.</p>
+  </header>
+
+  <div id="noRc" class="notice" hidden>이 페이지는 <b>선생님이 보내 준 링크</b>로 열어야 제출됩니다. 지금은 작성 후 <b>[내용 복사]</b>로 선생님께 보내 주세요.</div>
+
+  <form id="f" novalidate>
+    <div class="card">
+      <h2>① 기본 정보</h2>
+      <div class="q">
+        <div class="row">
+          <div><label for="grade">학년</label><select id="grade" name="grade"><option value="">선택</option><option>3</option><option>2</option><option>1</option><option value="졸업">졸업생</option></select></div>
+          <div><label for="cls">반 <span class="req">*</span></label><input id="cls" name="cls" type="text" inputmode="numeric" placeholder="예: 3"></div>
+          <div><label for="num">번호 <span class="req">*</span></label><input id="num" name="num" type="number" min="1" max="60" placeholder="예: 12"></div>
+        </div>
+      </div>
+      <div class="q">
+        <div class="row">
+          <div><label for="name">이름 <span class="req">*</span></label><input id="name" name="name" type="text" placeholder="홍길동"></div>
+          <div><label for="dept">학과</label><input id="dept" name="dept" type="text" placeholder="예: 스마트팩토리과"></div>
+        </div>
+      </div>
+      <div class="q">
+        <div class="row">
+          <div><label for="date">시험 본 날</label><input id="date" name="date" type="date"></div>
+          <div><label for="field">지원 직무(직렬)</label><input id="field" name="field" type="text" placeholder="예: 차량(기계), 전기통신"></div>
+        </div>
+      </div>
+      <div class="q">
+        <span class="lab">전공 과목</span>
+        <div class="chips" data-name="major">
+          <label><input type="radio" name="major" value="기계일반"><span>기계일반</span></label>
+          <label><input type="radio" name="major" value="전기일반"><span>전기일반</span></label>
+          <label><input type="radio" name="major" value="전자일반"><span>전자일반</span></label>
+          <label><input type="radio" name="major" value="기타"><span>기타</span></label>
+        </div>
+        <input id="majorEtc" name="majorEtc" type="text" placeholder="기타라면 과목 이름" style="margin-top:6px" hidden>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>② 난이도·시간</h2>
+      <div class="q">
+        <span class="lab">전체 난이도는? <span class="req">*</span></span>
+        <div class="chips">
+          <label><input type="radio" name="level" value="1 매우 쉬움"><span>매우 쉬움</span></label>
+          <label><input type="radio" name="level" value="2 쉬움"><span>쉬움</span></label>
+          <label><input type="radio" name="level" value="3 보통"><span>보통</span></label>
+          <label><input type="radio" name="level" value="4 어려움"><span>어려움</span></label>
+          <label><input type="radio" name="level" value="5 매우 어려움"><span>매우 어려움</span></label>
+        </div>
+      </div>
+      <div class="q">
+        <span class="lab">영역별 난이도 <span class="hint">(안 나온 영역은 비워 두세요)</span></span>
+        <table class="area">
+          <tr><td>의사소통</td><td><div class="chips"><label><input type="radio" name="a_com" value="쉬움"><span>쉬움</span></label><label><input type="radio" name="a_com" value="보통"><span>보통</span></label><label><input type="radio" name="a_com" value="어려움"><span>어려움</span></label></div></td></tr>
+          <tr><td>수리</td><td><div class="chips"><label><input type="radio" name="a_math" value="쉬움"><span>쉬움</span></label><label><input type="radio" name="a_math" value="보통"><span>보통</span></label><label><input type="radio" name="a_math" value="어려움"><span>어려움</span></label></div></td></tr>
+          <tr><td>문제해결</td><td><div class="chips"><label><input type="radio" name="a_prob" value="쉬움"><span>쉬움</span></label><label><input type="radio" name="a_prob" value="보통"><span>보통</span></label><label><input type="radio" name="a_prob" value="어려움"><span>어려움</span></label></div></td></tr>
+          <tr><td>전공</td><td><div class="chips"><label><input type="radio" name="a_major" value="쉬움"><span>쉬움</span></label><label><input type="radio" name="a_major" value="보통"><span>보통</span></label><label><input type="radio" name="a_major" value="어려움"><span>어려움</span></label></div></td></tr>
+        </table>
+      </div>
+      <div class="q">
+        <span class="lab">시험 시간은? <span class="req">*</span></span>
+        <div class="chips">
+          <label><input type="radio" name="time" value="넉넉했다"><span>넉넉했다</span></label>
+          <label><input type="radio" name="time" value="딱 맞았다"><span>딱 맞았다</span></label>
+          <label><input type="radio" name="time" value="조금 부족"><span>조금 부족</span></label>
+          <label><input type="radio" name="time" value="많이 부족(못 푼 문제 있음)"><span>많이 부족</span></label>
+        </div>
+      </div>
+      <div class="q">
+        <label for="unsolved">못 풀거나 찍은 문제는 대략 몇 개? <span class="hint">(모르면 비워도 됨)</span></label>
+        <input id="unsolved" name="unsolved" type="number" min="0" max="100" placeholder="예: 5" style="max-width:140px">
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>③ 출제 내용</h2>
+      <div class="q">
+        <label for="ncs">NCS에서 기억나는 문제 <b>유형·소재</b></label>
+        <textarea id="ncs" name="ncs" placeholder="예: 철도 안전 보도자료 읽고 일치하는 것 고르기 / 열차 시간표 보고 도착 시각 계산 / 조건 맞춰 좌석 배치"></textarea>
+      </div>
+      <div class="q">
+        <label for="majorQ">전공에서 나온 <b>주제·키워드</b></label>
+        <textarea id="majorQ" name="majorQ" placeholder="예: 기어 잇수와 속도비, 응력-변형률 선도, 키르히호프 법칙, 3상 유도전동기 회전수"></textarea>
+      </div>
+      <div class="q">
+        <label for="surprise">예상과 달랐던 점 · 당황했던 점</label>
+        <textarea id="surprise" name="surprise" placeholder="예: 계산 문제가 생각보다 많았다, 지문이 길었다"></textarea>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>④ 돌아보기</h2>
+      <div class="q">
+        <label for="helped">준비하면서 가장 도움이 된 것</label>
+        <textarea id="helped" name="helped" placeholder="예: 학교 NCS 문제풀이, 기능사 필기 공부, 모의고사"></textarea>
+      </div>
+      <div class="q">
+        <label for="lack">더 준비했으면 좋았을 것</label>
+        <textarea id="lack" name="lack" placeholder="예: 시간 재고 푸는 연습, 전공 계산 공식 암기"></textarea>
+      </div>
+      <div class="q">
+        <span class="lab">합격 자신감은? <span class="req">*</span></span>
+        <div class="chips">
+          <label><input type="radio" name="confidence" value="높음"><span>높음</span></label>
+          <label><input type="radio" name="confidence" value="반반"><span>반반</span></label>
+          <label><input type="radio" name="confidence" value="낮음"><span>낮음</span></label>
+        </div>
+      </div>
+      <div class="q">
+        <label for="tip">후배에게 한마디</label>
+        <textarea id="tip" name="tip" placeholder="예: 수리는 시간 오래 걸리니 뒤로 미루고 아는 것부터 풀기"></textarea>
+      </div>
+      <div class="q">
+        <label for="support">2차(면접 등) 준비로 학교에 바라는 도움</label>
+        <textarea id="support" name="support" placeholder="예: 모의 면접, 자기소개 1분 스피치 연습"></textarea>
+      </div>
+    </div>
+
+    <div class="card">
+      <button class="btn" id="send" type="submit">선생님께 제출하기</button>
+      <button class="btn ghost" id="copy" type="button">내용 복사</button>
+      <div class="msg" id="msg" role="status" aria-live="polite"></div>
+    </div>
+  </form>
+
+  <div class="card done" id="done" hidden>
+    <div class="big">✅</div>
+    <h2 style="font-size:20px;color:var(--ink)">제출 완료! 수고 많았어요.</h2>
+    <p style="color:var(--sub)">2차 준비도 함께 도와줄게요.</p>
+  </div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+  var TOOL = '코레일 1차 필기 후기';
+  var DRAFT = 'korail1_review_draft_v1';
+  var f = document.getElementById('f');
+  var msg = document.getElementById('msg');
+  var sendBtn = document.getElementById('send');
+  var rc = new URLSearchParams(location.search).get('rc') || '';
+  if (!/^https:\/\/script\.google\.com\/macros\/s\/[^/]+\/exec/.test(rc)) rc = '';
+  if (!rc) document.getElementById('noRc').hidden = false;
+
+  // 시트 열 이름 ← 입력칸 (순서대로 열이 생긴다)
+  var COLS = [
+    ['시험 본 날', 'date'], ['지원 직무', 'field'], ['전공 과목', 'major'],
+    ['전체 난이도', 'level'], ['의사소통', 'a_com'], ['수리', 'a_math'], ['문제해결', 'a_prob'], ['전공 난이도', 'a_major'],
+    ['시간', 'time'], ['못 푼·찍은 문제 수', 'unsolved'],
+    ['NCS 유형·소재', 'ncs'], ['전공 주제·키워드', 'majorQ'], ['예상과 달랐던 점', 'surprise'],
+    ['도움 된 것', 'helped'], ['더 준비할 것', 'lack'], ['합격 자신감', 'confidence'],
+    ['후배에게 한마디', 'tip'], ['학교에 바라는 도움', 'support']
+  ];
+
+  function val(name) {
+    if (name === 'major') {
+      var m = f.querySelector('input[name=major]:checked');
+      if (!m) return '';
+      return m.value === '기타' ? ('기타: ' + f.majorEtc.value.trim()) : m.value;
+    }
+    var el = f.elements[name];
+    if (!el) return '';
+    if (el instanceof RadioNodeList || (el.length && el[0] && el[0].type === 'radio')) {
+      var c = f.querySelector('input[name="' + name + '"]:checked');
+      return c ? c.value : '';
+    }
+    return String(el.value || '').trim();
+  }
+
+  // 기타 선택 시 입력칸
+  f.addEventListener('change', function (e) {
+    if (e.target.name === 'major') {
+      var etc = document.getElementById('majorEtc');
+      etc.hidden = e.target.value !== '기타';
+      if (!etc.hidden) etc.focus();
+    }
+    saveDraft();
+  });
+  f.addEventListener('input', saveDraft);
+
+  // 오늘 날짜 기본값
+  if (!f.date.value) { var t = new Date(); t.setMinutes(t.getMinutes() - t.getTimezoneOffset()); f.date.value = t.toISOString().slice(0, 10); }
+
+  // 임시 저장(이 기기에만) — 쓰다가 창이 닫혀도 이어 쓰기
+  function saveDraft() {
+    var o = {};
+    Array.prototype.forEach.call(f.elements, function (el) {
+      if (!el.name) return;
+      if (el.type === 'radio') { if (el.checked) o[el.name] = el.value; }
+      else o[el.name] = el.value;
+    });
+    try { localStorage.setItem(DRAFT, JSON.stringify(o)); } catch (e) {}
+  }
+  (function loadDraft() {
+    var o;
+    try { o = JSON.parse(localStorage.getItem(DRAFT) || 'null'); } catch (e) {}
+    if (!o) return;
+    Object.keys(o).forEach(function (k) {
+      var radio = f.querySelector('input[type=radio][name="' + k + '"][value="' + CSS.escape(o[k]) + '"]');
+      if (radio) radio.checked = true;
+      else if (f.elements[k] && f.elements[k].type !== 'radio') f.elements[k].value = o[k];
+    });
+    document.getElementById('majorEtc').hidden = o.major !== '기타';
+  })();
+
+  function check() {
+    var need = [['cls', '반'], ['num', '번호'], ['name', '이름'], ['level', '전체 난이도'], ['time', '시험 시간'], ['confidence', '합격 자신감']];
+    var miss = need.filter(function (n) { return !val(n[0]); }).map(function (n) { return n[1]; });
+    return miss;
+  }
+
+  function asText() {
+    var lines = ['[' + TOOL + '] ' + [val('grade') && val('grade') + '학년', val('cls') + '반', val('num') + '번', val('name'), val('dept')].filter(Boolean).join(' ')];
+    COLS.forEach(function (c) { var v = val(c[1]); if (v) lines.push('- ' + c[0] + ': ' + v); });
+    return lines.join('\n');
+  }
+
+  document.getElementById('copy').addEventListener('click', function () {
+    var text = asText();
+    var done = function () { msg.className = 'msg ok'; msg.textContent = '복사했어요. 메신저에 붙여넣어 선생님께 보내 주세요.'; };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(done, fallback);
+    } else fallback();
+    function fallback() {
+      var ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select();
+      try { document.execCommand('copy'); done(); } catch (e) { msg.className = 'msg err'; msg.textContent = '복사가 안 돼요. 화면을 캡처해서 보내 주세요.'; }
+      ta.remove();
+    }
+  });
+
+  f.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var miss = check();
+    if (miss.length) { msg.className = 'msg err'; msg.textContent = '빠진 칸: ' + miss.join(', '); return; }
+    if (!rc) { msg.className = 'msg err'; msg.textContent = '제출 주소가 없는 링크예요. [내용 복사]로 선생님께 보내 주세요.'; return; }
+
+    var cols = {};
+    COLS.forEach(function (c) { cols[c[0]] = val(c[1]); });
+    var body = {
+      tool: TOOL, mode: '1차 필기 후기',
+      cls: val('cls'), num: val('num'), name: val('name'), grade: val('grade'), dept: val('dept'),
+      cols: cols, ua: navigator.userAgent
+    };
+    sendBtn.disabled = true;
+    msg.className = 'msg'; msg.textContent = '보내는 중…';
+    fetch(rc, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(body) })
+      .then(function (r) { return r.json().catch(function () { return { ok: true }; }); })
+      .then(function (res) {
+        if (res && res.ok === false) throw new Error(res.error || '서버 오류');
+        try { localStorage.removeItem(DRAFT); } catch (e) {}
+        f.hidden = true;
+        document.getElementById('done').hidden = false;
+        window.scrollTo(0, 0);
+      })
+      .catch(function (err) {
+        sendBtn.disabled = false;
+        msg.className = 'msg err';
+        msg.textContent = '전송 실패: ' + err.message + ' — 다시 누르거나 [내용 복사]로 보내 주세요.';
+      });
+  });
+})();
+</script>
+</body>
+</html>
